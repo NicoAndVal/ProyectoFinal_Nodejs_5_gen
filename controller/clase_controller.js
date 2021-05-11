@@ -32,12 +32,6 @@ function agregarDia(req, res, next) {
 
 function agregarClase(req, res, next) {
 
-    // let data = {
-    //     dia_clase : req.body.dia_clase,
-    //     horarios: req.body.horarios,
-    //     alumno: []
-    // }
-
     const modelClase = new ModelClase(req.body);
     try {
         modelClase.save((err, docClase) => {
@@ -87,18 +81,23 @@ async function agregarAlumnos(req, res, next) {
   try {
     const clase = await ModelClase.findById(req.params.idClase);
 
+    const alumno = await ModelAlumno.findById(req.body.alumno);
 
-    let data = {
-      _id: clase.id,
-      nombre: clase.nombre,
-      dia_clase: clase.dia_clase,
-      hora_inicio: clase.hora_inicio,
-      hora_final: clase.hora_final,
-      tipo_clase: clase.tipo_clase,
-      alumnos: req.body.alumnos
-    }
-    const claseNueva = await ModelClase.findByIdAndUpdate({ _id: req.params.idClase }, data, { new: true })
-    return res.json(claseNueva)
+    clase.addAlumno(alumno);
+
+    res.json(clase);
+
+  } catch (error) {
+    console.log(error);
+    next();
+  }
+}
+async function eliminarAlumno(req, res, next) {
+  try {
+    const clase = await ModelClase.findById(req.params.idClase);
+    const alumno = await ModelAlumno.findById(req.body.alumno);
+    clase.deleteAlumno(alumno);
+    return res.json(clase);
   } catch (error) {
     console.log(error);
     next();
@@ -115,10 +114,46 @@ async function eliminarClase(req, res, next) {
   }
 }
 
+async function sumarClase(req, res, next) {
+  try {
+    let idAlumno = req.body._id
+    const clase = await ModelClase.findById(req.params.idClase);
+    //Ver si el alumno está en la clase 
+    const alumnoInscrito = clase.alumnos.filter(al => al._id.toString() === idAlumno.toString());
+    //Actualizar el alumno, si fue o no se verá en el valor enviado 
+    if (alumnoInscrito.length > 0) {
+        let alumno =await ModelAlumno.findById(alumnoInscrito);
+        let clases_realizadas = alumno.clases_realizadas;
+        let clases_restantes = alumno.clases_restantes;
+        if (req.body.presente || clases_restantes>0) {
+          clases_realizadas += 1;
+          clases_restantes -= 1;
+          let data = {
+            clases_realizadas,
+            clases_restantes
+          }
+          ModelAlumno.findByIdAndUpdate(alumnoInscrito, data, { new: true }, (err, docAlumno) => {
+            if (err || !docAlumno) return errorHandler(docAlumno, next, err);
+
+            return res.json(docAlumno);
+          })
+            
+        }
+    } else {
+      return res.json('El alumno no inscrito en la clase');
+    }
+    
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 module.exports = {
   agregarClase,
   mostrarClases,
   actualizarClase,
   eliminarClase,
-  agregarAlumnos
+  agregarAlumnos,
+  eliminarAlumno,
+  sumarClase
 }

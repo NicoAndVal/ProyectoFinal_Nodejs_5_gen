@@ -66,6 +66,8 @@ function login(req, res, next) {
   try {
     ModelUsuario.findOne({email:email}).exec((err, docUsuario) => {
 
+      if (err || !docUsuario) return errorHandler(docUsuario, next, err);
+
       if (!bcrypt.compareSync(pass, docUsuario.pass)) {
         return res.status(404).json({
           message: 'Usuario o password incorrectos'

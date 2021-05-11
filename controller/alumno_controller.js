@@ -26,7 +26,8 @@ async function agregarAlumno(req, res, next) {
         plan: plan,
         email: req.body.email,
         pass: bcrypt.hashSync(req.body.pass, salt),
-        role: req.body.role
+        role: req.body.role,
+        clases_restantes: plan.cantidad_clases
     }
 
     let modelAlumno = new ModelAlumno(data);
@@ -90,6 +91,7 @@ async function editarAlumno(req, res, next) {
 
     let data = {
         nombre: req.body.nombre,
+        clases_restantes: req.body.clases_restantes,
         plan: plan
     }
 

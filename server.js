@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose')
-
+var cors = require('cors')
 const router = require('./routers/index')
 app.use(express.json());
 
@@ -22,6 +22,8 @@ app.use(function (err, req, res, next) {
     data: data
   })
 })
+
+app.use(cors());
 
 mongoose.connect('mongodb://localhost/proyectoFinal', {
   useNewUrlParser: true,
